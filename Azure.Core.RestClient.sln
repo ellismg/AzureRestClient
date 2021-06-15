@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Azure.Core.RestClient", "Azure.Core.RestClient\Azure.Core.RestClient.csproj", "{FDB09C98-33DA-44A5-B99B-AE34FDEC7F61}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Core.RestClient.Demo", "Azure.Core.RestClient.Demo\Azure.Core.RestClient.Demo.csproj", "{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FDB09C98-33DA-44A5-B99B-AE34FDEC7F61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDB09C98-33DA-44A5-B99B-AE34FDEC7F61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDB09C98-33DA-44A5-B99B-AE34FDEC7F61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDB09C98-33DA-44A5-B99B-AE34FDEC7F61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FFCF33E5-DDFD-4C5A-A0BE-48E595D76382}
+	EndGlobalSection
+EndGlobal
