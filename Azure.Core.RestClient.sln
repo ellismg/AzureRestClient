@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Azure.Core.RestClient", "Azure.Core.RestClient\Azure.Core.RestClient.csproj", "{FDB09C98-33DA-44A5-B99B-AE34FDEC7F61}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Core.RestClient.Demo", "Azure.Core.RestClient.Demo\Azure.Core.RestClient.Demo.csproj", "{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Azure.Core.RestClient.Demo", "Azure.Core.RestClient.Demo\Azure.Core.RestClient.Demo.csproj", "{68B0B4BB-CD41-4A87-B645-A061E3F2EB44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

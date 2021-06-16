@@ -32,7 +32,7 @@ namespace Azure.Core
             }
             else
             {
-                return ProcessAsync(message, pipeline);
+                return ProcessNextAsync(message, pipeline);
             }
         }
     }

@@ -22,15 +22,8 @@ namespace Azure.Core
         /// <returns>
         /// <see cref = "Operation{T}" /> which can be used to monitor that operation's value as a <see cref="JsonNode" />.
         /// </returns>
-        public virtual Operation<JsonNode> OperationFromResponse(Response response, GetOperationOptions options = default)
-        {
-            if (response.Headers.TryGetValue("Operation-Location", out string operationLocation))
-            {
-                return new RestClientOperation<JsonNode>(this, new Uri(operationLocation), response, (Response r) => JsonNode.Parse(r.Content), options);
-            }
-
-            throw new InvalidOperationException("Could not determine operation location from response");
-        }
+        public virtual Operation<JsonNode> OperationFromResponse(Response response, GetOperationOptions options = default) =>
+            OperationFromResponse(response, (Response r) => JsonNode.Parse(r.Content), options);
 
         /// <summary>
         /// Converts a <see cref="Response"/> which represents a long running operation into an <see cref="Operation{T}"/> which can be used
@@ -42,11 +35,40 @@ namespace Azure.Core
         /// <returns>
         /// <see cref = "Operation{T}" /> which can be used to monitor that operation's value as a <typeparamref name="T"/>.
         /// </returns>
-        public virtual Operation<T> OperationFromResponse<T>(Response response, GetOperationOptions options = default)
+        public virtual Operation<T> OperationFromResponse<T>(Response response, GetOperationOptions options = default) =>
+            OperationFromResponse<T>(response, (Response r) => r.Content.ToObject<T>(ValueSerializer), options);
+
+
+        private Operation<T> OperationFromResponse<T>(Response response, Func<Response, T> valueSelector, GetOperationOptions options)
         {
             if (response.Headers.TryGetValue("Operation-Location", out string operationLocation))
             {
-                return new RestClientOperation<T>(this, new Uri(operationLocation), response, (Response r) => r.Content.ToObject<T>(ValueSerializer), options);
+                options ??= s_defaultGetOperationOptions;
+
+                Uri finalStateUri = null;
+
+                if (options.FinalState == GetOperationOptions.FinalStateBehavior.UseLocationHeader)
+                {
+                    string locationHeader;
+
+                    if (!response.Headers.TryGetValue("Location", out locationHeader)) {
+                        throw new InvalidOperationException("Location header is not present in response");
+                    }
+
+                    finalStateUri = new Uri(locationHeader);
+                }
+                else if (options.FinalState == GetOperationOptions.FinalStateBehavior.UseCustomUri)
+                {
+                    if (options.FinalStateUri == null)
+                    {
+                        throw new ArgumentNullException($"{nameof(options.FinalStateUri)} ");
+                    }
+
+                    finalStateUri = options.FinalStateUri;
+                }
+
+
+                return new RestClientOperation<T>(this, new Uri(operationLocation), finalStateUri, response, valueSelector, options);
             }
 
             throw new InvalidOperationException("Could not determine operation location from response");
@@ -62,28 +84,30 @@ namespace Azure.Core
 
             private readonly OperationInternal<TModel> _operationInternal;
             private readonly Uri _operationUri;
+            private readonly Uri _finalStateUri;
             private readonly AzureRestClient _client;
             private readonly Func<Response, TModel> _resultSelector;
             private readonly SendRequestOptions _requestOptions;
 
             private Dictionary<string, TerminalStateType> _terminalStates = new Dictionary<string, TerminalStateType>(StringComparer.OrdinalIgnoreCase)
             {
-                ["Succeed"] = TerminalStateType.Success,
+                ["Succeeded"] = TerminalStateType.Success,
                 ["Failed"] = TerminalStateType.Failure,
                 ["Cancelled"] = TerminalStateType.Failure
             };
 
-            public RestClientOperation(AzureRestClient client, Uri operationUri, Response initialResponse, Func<Response, TModel> resultSelector, GetOperationOptions options)
+            public RestClientOperation(AzureRestClient client, Uri operationUri, Uri finalStateUri, Response initialResponse, Func<Response, TModel> resultSelector, GetOperationOptions options)
             {
                 options ??= s_defaultGetOperationOptions;
 
                 _client = client;
                 _operationInternal = new OperationInternal<TModel>(_client._clientDiagnostics, this, initialResponse);
                 _operationUri = operationUri;
+                _finalStateUri = finalStateUri;
                 _resultSelector = resultSelector;
                 _requestOptions = options.SendRequestOptions;
 
-                foreach (string status in options.AdditionalFailureStatusValues)
+                foreach (string status in options.AdditionalSuccessfulStatusValues)
                 {
                     _terminalStates.Add(status, TerminalStateType.Success);
                 }
@@ -106,9 +130,12 @@ namespace Azure.Core
 
             public async ValueTask<OperationState<TModel>> UpdateStateAsync(bool async, CancellationToken cancellationToken)
             {
-                Response res = async ?
-                    await _client.SendRequest(RequestMethod.Get, _operationUri, default(RequestContent), "AzureRestClient.UpdateStatus", _requestOptions, true, cancellationToken).ConfigureAwait(false) :
-                    _client.SendRequest(RequestMethod.Get, _operationUri, default(RequestContent), "AzureRestClient.UpdateStatus", _requestOptions, false, cancellationToken).EnsureCompleted();
+                Task<Response> getUri(Uri uri, string scopeName, bool async, CancellationToken cancellationToken)
+                {
+                    return _client.SendRequest(RequestMethod.Get, uri, default(RequestContent), scopeName, _requestOptions, async, cancellationToken);
+                }
+
+                Response res = async ? await getUri(_operationUri, "RestClientOperation.UpdateState", async, cancellationToken).ConfigureAwait(false) : getUri(_operationUri, "RestClientOperation.UpdateState", async, cancellationToken).EnsureCompleted();
 
                 string status = JsonUtil.GetOperationStatusFromJson(res.Content);
 
@@ -117,9 +144,12 @@ namespace Azure.Core
                     switch (state)
                     {
                         case TerminalStateType.Success:
-                            // TODO(matell): Need to consider what the final location is so we can use that response as input to the selector,
-                            // right now this assumes a final-state-via azure-async-operation (to use autorest parlance).
                             Response finalStateResponse = res;
+                            if (_finalStateUri != null)
+                            {
+                                finalStateResponse = async ? await getUri(_operationUri, "RestClientOperation.GetFinalState", async, cancellationToken).ConfigureAwait(false) : getUri(_operationUri, "RestClientOperation.GetFinalState", async, cancellationToken).EnsureCompleted();
+                            }
+
                             return OperationState<TModel>.Success(res, _resultSelector(finalStateResponse));
                         case TerminalStateType.Failure:
                             return OperationState<TModel>.Failure(res);

@@ -202,9 +202,10 @@ namespace Azure.Core
 
         private Uri BuildUriForRequest(FormattableString path, IReadOnlyDictionary<string, (string value, bool escape)> additionalQueryParameters)
         {
-            RequestUriBuilder builder = new RequestUriBuilder();
+            RawRequestUriBuilder builder = new RawRequestUriBuilder();
             builder.Reset(Endpoint);
-            builder.AppendPath(path.ToString(UriPathFormaterProvider.Instance), escape: false);            
+
+            builder.AppendRaw(path.ToString(UriPathFormaterProvider.Instance), escape: false);
 
             if (!string.IsNullOrEmpty(ApiVersion))
             {
@@ -222,7 +223,7 @@ namespace Azure.Core
             return builder.ToUri();
         }
 
-        private  Task<Response> SendRequest(RequestMethod method, FormattableString path, RequestContent body, string scopeName, SendRequestOptions options, bool async, CancellationToken cancellationToken)
+        private Task<Response> SendRequest(RequestMethod method, FormattableString path, RequestContent body, string scopeName, SendRequestOptions options, bool async, CancellationToken cancellationToken)
         {
             return SendRequest(method, BuildUriForRequest(path, options._queries), body, scopeName, options, async, cancellationToken);
         }
