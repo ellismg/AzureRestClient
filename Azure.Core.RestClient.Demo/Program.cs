@@ -55,13 +55,22 @@ foreach (Farmer f in client.GetValues<Farmer>($"/farmers"))
 string jobId = $"ecd-{Guid.NewGuid()}";
 
 Response initial = client.Put($"/farmers/cascade-delete/{jobId}?farmerId={farmer_id}", default(RequestContent));
-Operation<JsonNode> o = client.OperationFromResponse(initial);
+Operation<JsonNode> o = client.OperationFromResponse(initial, new GetOperationOptions()
+{
+    FinalStateLocation = OperationFinalStateLocation.UseLocationHeader,
+});
 Response final = o.WaitForCompletionResponseAsync().GetAwaiter().GetResult();
 
 Console.WriteLine($"Removal Final Status: {final.Status}");
 Console.WriteLine($"Removal Completed: {o.HasCompleted}");
 Console.WriteLine($"Removal Has Value: {o.HasValue}");
 Console.WriteLine($"Removal Final Body: {o.Value}");
+
+// List Farmers, Again.
+foreach (Farmer f in client.GetValues<Farmer>($"/farmers"))
+{
+    Console.WriteLine($"Farmer: [ id: {f.Id}, name: {f.Name ?? "<none>"} ]");
+}
 
 class Farmer
 {

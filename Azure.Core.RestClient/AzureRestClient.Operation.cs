@@ -47,7 +47,7 @@ namespace Azure.Core
 
                 Uri finalStateUri = null;
 
-                if (options.FinalState == GetOperationOptions.FinalStateBehavior.UseLocationHeader)
+                if (options.FinalStateLocation == OperationFinalStateLocation.UseLocationHeader)
                 {
                     string locationHeader;
 
@@ -57,7 +57,7 @@ namespace Azure.Core
 
                     finalStateUri = new Uri(locationHeader);
                 }
-                else if (options.FinalState == GetOperationOptions.FinalStateBehavior.UseCustomUri)
+                else if (options.FinalStateLocation == OperationFinalStateLocation.UseCustomUri)
                 {
                     if (options.FinalStateUri == null)
                     {

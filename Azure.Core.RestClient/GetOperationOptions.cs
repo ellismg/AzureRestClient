@@ -11,22 +11,6 @@ namespace Azure.Core
     /// </summary>
     public class GetOperationOptions
     {
-        public enum FinalStateBehavior
-        {
-            /// <summary>
-            /// The final state of the operation is located at URI of the operation itself.
-            /// </summary>
-            Default,
-            /// <summary>
-            /// The final state of the operation is located at URI from the Location header of the operation.
-            /// </summary>
-            UseLocationHeader,
-            /// <summary>
-            /// The final state of the operation is located at a custom Url.
-            /// </summary>
-            UseCustomUri
-        }
-
         /// <summary>
         /// The names of additional successful terminal states (when the operation has completed without error).
         /// </summary>
@@ -51,6 +35,6 @@ namespace Azure.Core
         /// <summary>
         /// Controls how the final state for an operation is retrieved.
         /// </summary>
-        public FinalStateBehavior FinalState { get; set; } = FinalStateBehavior.Default;
+        public OperationFinalStateLocation FinalStateLocation { get; set; } = OperationFinalStateLocation.Default;
     }
 }
